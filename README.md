@@ -45,7 +45,7 @@ var k = koanf.New(".")
 
 func main() {
 	// Load registry values.
-	if err := k.Load(Provider(Config{Key: LOCAL_MACHINE, Path: "SOFTWARE\\Microsoft\\Windows NT", MaxDepth: 2}), nil); err != nil {
+	if err := k.Load(winreg.Provider(winreg.Config{Key: winreg.LOCAL_MACHINE, Path: "SOFTWARE\\Microsoft\\Windows NT", MaxDepth: 2}), nil); err != nil {
 		log.Fatalf("error loading config: %v", err)
 	}
 
