@@ -35,7 +35,8 @@ const (
 type Config struct {
 	Key          registry.Key // Registry key
 	Path         string       // A top path in selected key
-	DefaultValue string       // The name of the value to which the default key value will be mapped.
+	DefaultValue string       // The name of the value to which the default key value will be mapped
+	MaxDepth     uint         // Maximum subkey reading depth
 	Mode         int          // 32/64 bit registry branch, one of RegAuto/Reg32Bit/Reg64Bit constant
 }
 
@@ -43,6 +44,7 @@ type WinReg struct {
 	key          registry.Key
 	path         string
 	defaultValue string
+	maxDepth     uint
 	access       uint32
 }
 
@@ -51,6 +53,7 @@ func Provider(cfg Config) *WinReg {
 		key:          cfg.Key,
 		path:         cfg.Path,
 		defaultValue: cfg.DefaultValue,
+		maxDepth:     cfg.MaxDepth,
 		access:       cfg.getAccess(),
 	}
 }
@@ -60,7 +63,7 @@ func (s *WinReg) ReadBytes() ([]byte, error) {
 }
 
 func (s *WinReg) Read() (map[string]interface{}, error) {
-	if retval, err := s.readKey(s.path); err != nil {
+	if retval, err := s.readKey(s.path, 1); err != nil {
 		return nil, fmt.Errorf("unable to read registry %s", err.Error())
 	} else {
 		return retval, nil
@@ -86,7 +89,7 @@ func (s *WinReg) getKeyName(path string) string {
 	}
 }
 
-func (s *WinReg) readKey(path string) (map[string]interface{}, error) {
+func (s *WinReg) readKey(path string, level uint) (map[string]interface{}, error) {
 	k, err := registry.OpenKey(s.key, path, s.access)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %s", s.getKeyName(path), err.Error())
@@ -155,17 +158,19 @@ func (s *WinReg) readKey(path string) (map[string]interface{}, error) {
 	}
 
 	// Reading subkeys
-	if subKeys, err := k.ReadSubKeyNames(0); err != nil && !errors.Is(err, io.EOF) {
-		return nil, fmt.Errorf("%s: %s", s.getKeyName(path), err.Error())
-	} else {
-		for _, subKey := range subKeys {
-			if retval[subKey], err = s.readKey(path + "\\" + subKey); err != nil {
-				return nil, fmt.Errorf("%s: %s", s.getKeyName(path), err.Error())
+	if (s.maxDepth == 0) || (level < s.maxDepth) {
+		if subKeys, err := k.ReadSubKeyNames(0); err != nil && !errors.Is(err, io.EOF) {
+			return nil, fmt.Errorf("%s: %s", s.getKeyName(path), err.Error())
+		} else {
+			for _, subKey := range subKeys {
+				if retval[subKey], err = s.readKey(path+"\\"+subKey, level+1); err != nil {
+					return nil, fmt.Errorf("%s: %s", s.getKeyName(path), err.Error())
+				}
 			}
 		}
-
-		return retval, nil
 	}
+
+	return retval, nil
 }
 
 func (s *WinReg) Watch(cb func(event interface{}, err error)) error {

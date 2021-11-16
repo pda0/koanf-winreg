@@ -173,6 +173,149 @@ func TestParseRegistry(t *testing.T) {
 	}
 }
 
+func TestFailMaxDapthRegistry(t *testing.T) {
+	t.Log("Testing depth limit of Windows registry provider.")
+	{
+		createTestData(t)
+		defer deleteTestData(t)
+
+		testID := 0
+		t.Logf("\tTest %d:\tdepth 3 limit.", testID)
+		{
+			allKeys := map[string]bool{
+				"SubKeyA.Binary":   false,
+				"SubKeyA.Expand":   false,
+				"SubKeyA.Int64":    false,
+				"SubKeyA.IntVal":   false,
+				"SubKeyA.StrList":  false,
+				"SubKeyA.StrValue": false,
+				"SubKeyA.Sub Key":  false,
+				"SubKeyB":          false,
+				"off":              false,
+				"on":               false,
+			}
+			k := koanf.New(".")
+			if err := k.Load(Provider(Config{Key: CURRENT_USER, Path: "SOFTWARE\\" + testKey, MaxDepth: 3}), nil); err != nil {
+				t.Fatalf("\t%s\tUnable to read registry: %s.", failed, err.Error())
+				return
+			}
+
+			for _, key := range k.Keys() {
+				if _, ok := allKeys[key]; !ok {
+					t.Fatalf("\t%s\treaded keys check failed, got unexpected key \"%s\".", failed, key)
+				}
+
+				allKeys[key] = true
+			}
+			for key, value := range allKeys {
+				if !value {
+					t.Fatalf("\t%s\treaded keys check failed, key \"%s\" wasn't read.", failed, key)
+				}
+			}
+			t.Logf("\t%s\tAll values read successfully.", success)
+		}
+
+		testID++
+		t.Logf("\tTest %d:\tdepth 2 limit.", testID)
+		{
+			allKeys := map[string]bool{
+				"SubKeyA.Binary":   false,
+				"SubKeyA.Expand":   false,
+				"SubKeyA.Int64":    false,
+				"SubKeyA.IntVal":   false,
+				"SubKeyA.StrList":  false,
+				"SubKeyA.StrValue": false,
+				"SubKeyB":          false,
+				"off":              false,
+				"on":               false,
+			}
+			k := koanf.New(".")
+			if err := k.Load(Provider(Config{Key: CURRENT_USER, Path: "SOFTWARE\\" + testKey, MaxDepth: 2}), nil); err != nil {
+				t.Fatalf("\t%s\tUnable to read registry: %s.", failed, err.Error())
+				return
+			}
+
+			for _, key := range k.Keys() {
+				if _, ok := allKeys[key]; !ok {
+					t.Fatalf("\t%s\treaded keys check failed, got unexpected key \"%s\".", failed, key)
+				}
+
+				allKeys[key] = true
+			}
+			for key, value := range allKeys {
+				if !value {
+					t.Fatalf("\t%s\treaded keys check failed, key \"%s\" wasn't read.", failed, key)
+				}
+			}
+			t.Logf("\t%s\tAll values read successfully.", success)
+		}
+
+		testID++
+		t.Logf("\tTest %d:\tdepth 1 limit.", testID)
+		{
+			allKeys := map[string]bool{
+				"off": false,
+				"on":  false,
+			}
+			k := koanf.New(".")
+			if err := k.Load(Provider(Config{Key: CURRENT_USER, Path: "SOFTWARE\\" + testKey, MaxDepth: 1}), nil); err != nil {
+				t.Fatalf("\t%s\tUnable to read registry: %s.", failed, err.Error())
+				return
+			}
+
+			for _, key := range k.Keys() {
+				if _, ok := allKeys[key]; !ok {
+					t.Fatalf("\t%s\treaded keys check failed, got unexpected key \"%s\".", failed, key)
+				}
+
+				allKeys[key] = true
+			}
+			for key, value := range allKeys {
+				if !value {
+					t.Fatalf("\t%s\treaded keys check failed, key \"%s\" wasn't read.", failed, key)
+				}
+			}
+			t.Logf("\t%s\tAll values read successfully.", success)
+		}
+
+		testID++
+		t.Logf("\tTest %d:\tdepth 0 (no) limit.", testID)
+		{
+			allKeys := map[string]bool{
+				"SubKeyA.Binary":   false,
+				"SubKeyA.Expand":   false,
+				"SubKeyA.Int64":    false,
+				"SubKeyA.IntVal":   false,
+				"SubKeyA.StrList":  false,
+				"SubKeyA.StrValue": false,
+				"SubKeyA.Sub Key":  false,
+				"SubKeyB":          false,
+				"off":              false,
+				"on":               false,
+			}
+			k := koanf.New(".")
+			if err := k.Load(Provider(Config{Key: CURRENT_USER, Path: "SOFTWARE\\" + testKey, MaxDepth: 0}), nil); err != nil {
+				t.Fatalf("\t%s\tUnable to read registry: %s.", failed, err.Error())
+				return
+			}
+
+			for _, key := range k.Keys() {
+				if _, ok := allKeys[key]; !ok {
+					t.Fatalf("\t%s\treaded keys check failed, got unexpected key \"%s\".", failed, key)
+				}
+
+				allKeys[key] = true
+			}
+			for key, value := range allKeys {
+				if !value {
+					t.Fatalf("\t%s\treaded keys check failed, key \"%s\" wasn't read.", failed, key)
+				}
+			}
+			t.Logf("\t%s\tAll values read successfully.", success)
+		}
+	}
+}
+
 func TestFailParseRegistry(t *testing.T) {
 	t.Log("Testing Windows registry provider (fail).")
 	{
@@ -202,7 +345,7 @@ func createTestData(t *testing.T) {
 	}
 
 	if exists {
-		// Такой ключ уже существует, остался от прошлого неудачного теста
+		// Such a key already exists, left over from a past unsuccessful test
 		k.Close()
 		deleteTestData(t)
 		k, exists, err = registry.CreateKey(registry.CURRENT_USER, "SOFTWARE\\"+testKey, registry.ALL_ACCESS)
