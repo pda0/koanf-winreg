@@ -8,7 +8,7 @@
 
 - [Concepts](#concepts)
 - [Reading config from Windows registry](#reading-config-from-windows-registry)
-- [Watching registry key for changes](#watching-registry-key-for-changes
+- [Watching registry key for changes](#watching-registry-key-for-changes)
 
 ### Concepts
 
