@@ -1,6 +1,6 @@
 //go:build windows
 
-// Package vault implements a koanf.Provider for Windows registry
+// Package winreg implements a koanf.Provider for Windows registry
 // and returns a nested config map to provide it to koanf.
 package winreg
 
