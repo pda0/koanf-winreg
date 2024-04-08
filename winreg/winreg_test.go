@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/v2"
 	"golang.org/x/sys/windows/registry"
 )
 

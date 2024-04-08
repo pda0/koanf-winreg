@@ -2,7 +2,7 @@
 
 ### Installation
 
-`go get -u github.com/pda0/koanf-winreg`
+`go get -u github.com/pda0/koanf-winreg/v2`
 
 ### Contents
 
@@ -44,8 +44,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/knadh/koanf"
-	"github.com/pda0/koanf-winreg/winreg"
+	"github.com/knadh/koanf/v2"
+	"github.com/pda0/koanf-winreg/v2/winreg"
 )
 
 // Global koanf instance. Use "." as the key path delimiter. This can be "/" or any character.
@@ -83,8 +83,8 @@ package main
 import (
 	"log"
 
-	"github.com/knadh/koanf"
-	"github.com/pda0/koanf-winreg/winreg"
+	"github.com/knadh/koanf/v2"
+	"github.com/pda0/koanf-winreg/v2/winreg"
 	"golang.org/x/sys/windows/registry"
 )
 
